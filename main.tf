@@ -39,7 +39,7 @@ data "aws_route53_zone" "parent" {
 resource "aws_route53_record" "ns" {
   provider        = "aws.parent-zone-account"
   count           = var.parent_domain_name == "" ? 0 : 1
-  zone_id         = data.aws_route53_zone.parent.*.zone_id
+  zone_id         = element(data.aws_route53_zone.parent.*.zone_id, 0)
   name            = local.fqdn
   allow_overwrite = true
   type            = "NS"
