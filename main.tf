@@ -51,3 +51,12 @@ resource "aws_route53_record" "ns" {
     aws_route53_zone.dns_zone.name_servers.3,
   ]
 }
+
+module "acm_request_certificate" {
+  enabled                           = var.certificate_enabled
+  source                            = "git::https://github.com/cloudposse/terraform-aws-acm-request-certificate.git?ref=tags/0.4.0"
+  subject_alternative_names         = concat([format("*.%s", local.qdn)], var.certificate_alternative_names)
+  process_domain_validation_options = true
+  wait_for_certificate_issued       = true
+  domain_name                       = local.fqdn
+}

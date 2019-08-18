@@ -50,3 +50,14 @@ variable "aws_profile" {
   default     = ""
   description = "The AWS profile to use to get access to the Route53 hosted zone owner account"
 }
+
+variable "certificate_alternative_names" {
+  type        = list(string)
+  default     = []
+  description = "Alternative names to add to the certificate"
+}
+
+variable "certificate_enabled" {
+  default     = true
+  description = "Whether an AWS ACM certificate should be issued for the domain"
+}
