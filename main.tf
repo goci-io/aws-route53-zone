@@ -31,8 +31,8 @@ provider "aws" {
 }
 
 data "aws_route53_zone" "parent" {
-  count     = var.parent_domain_name == "" ? 0 : 1
   provider  = "aws.parent-zone-account"
+  count     = var.parent_domain_name == "" ? 0 : 1
   name      = var.parent_domain_name
 }
 
@@ -53,10 +53,10 @@ resource "aws_route53_record" "ns" {
 }
 
 module "acm_request_certificate" {
-  enabled                           = var.certificate_enabled
   source                            = "git::https://github.com/cloudposse/terraform-aws-acm-request-certificate.git?ref=tags/0.4.0"
   subject_alternative_names         = concat([format("*.%s", local.qdn)], var.certificate_alternative_names)
+  enabled                           = var.certificate_enabled
+  domain_name                       = local.fqdn
   process_domain_validation_options = true
   wait_for_certificate_issued       = true
-  domain_name                       = local.fqdn
 }
