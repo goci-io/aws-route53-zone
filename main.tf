@@ -5,7 +5,7 @@ terraform {
 
 locals {
   tld          = element(local.domain_parts, length(local.domain_parts) - 1)
-  domain_parts = var.parent_domain_name == "" ? [var.tld] : split(var.parent_domain_name)
+  domain_parts = var.parent_domain_name == "" ? [var.tld] : split(".", var.parent_domain_name)
   fqdn         = var.domain_name == "" ? format("%s.%s", module.label.id, local.tld) : var.domain_name
 }
 
