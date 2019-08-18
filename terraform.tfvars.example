@@ -1,0 +1,22 @@
+# Examples
+
+# Creates domain staging.eu1.goci.io
+# Synchronizes Nameservers attached to goci.io with an additional NS entry
+namespace        = "goci"
+stage            = "staging"
+attributes       = ["eu1"]
+parent_zone_name = "goci.io"
+
+# Creates domain apps.staging.eu1.goci.io
+# Does not create Nameserver entries in a seperate hosted zone
+namespace        = "goci"
+stage            = "staging"
+attributes       = ["eu1"]
+name             = "apps"
+
+# Creates domain apps.europe.staging.goci.io
+# Synchronizes Nameservers attached to goci.io with an additional NS entry
+namespace        = "goci"
+stage            = "staging"
+domain_name      = "apps.europe.staging.goci.io"
+parent_zone_name = "goci.io"
