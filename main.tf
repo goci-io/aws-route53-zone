@@ -52,7 +52,7 @@ resource "aws_route53_record" "ns" {
   ]
 }
 
-module "acm_request_certificate" {
+module "acm" {
   source                            = "git::https://github.com/cloudposse/terraform-aws-acm-request-certificate.git?ref=tags/0.4.0"
   subject_alternative_names         = concat([format("*.%s", local.fqdn)], var.certificate_alternative_names)
   enabled                           = var.certificate_enabled
