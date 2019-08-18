@@ -10,3 +10,11 @@ output "name_servers" {
 output "domain_name" {
   value = local.fqdn
 }
+
+output "certificate_arn" {
+  value = module.acm.arn
+}
+
+output "certificate_validation_options" {
+  value = module.acm.domain_validation_options
+}
