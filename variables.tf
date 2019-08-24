@@ -45,10 +45,16 @@ variable "domain_name" {
   description = "Fully qualified domain to create the hosted zone for (if not automatically build from label)"
 }
 
-variable "aws_profile" {
+variable "aws_assume_role_arn" {
   type        = string
   default     = ""
-  description = "The AWS profile to use to get access to the Route53 hosted zone owner account"
+  description = "Role to assume to get access to AWS"
+}
+
+variable "aws_parent_account_assume_role_arn" {
+  type        = string
+  default     = ""
+  description = "Role to assume to get access to the AWS parent Account"
 }
 
 variable "certificate_alternative_names" {

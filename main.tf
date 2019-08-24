@@ -1,12 +1,10 @@
-terraform {
-  required_version = ">= 0.12.1"
-  backend "s3" {}
-}
 
 locals {
+  prod_stages  = ["prod", "production", "main"]
   tld          = element(local.domain_parts, length(local.domain_parts) - 1)
   domain_parts = var.parent_domain_name == "" ? [var.tld] : split(".", var.parent_domain_name)
   fqdn         = var.domain_name == "" ? format("%s.%s", module.label.id, local.tld) : var.domain_name
+  label_order  = contains(local.prod_stages, var.stage) ? ["name", "attributes", "namespace"] : ["name", "stage", "attributes", "namespace"]
 }
 
 module "label" {
@@ -16,18 +14,13 @@ module "label" {
   attributes  = var.attributes
   tags        = var.tags
   name        = var.name
+  label_order = local.label_order
   delimiter   = "."
-  label_order = ["name", "stage", "attributes", "namespace"]
 }
 
 resource "aws_route53_zone" "dns_zone" {
   name = local.fqdn
   tags = module.label.tags
-}
-
-provider "aws" {
-  alias   = "parent-zone-account"
-  profile = var.aws_profile
 }
 
 data "aws_route53_zone" "parent" {
