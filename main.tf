@@ -19,18 +19,17 @@ module "label" {
 }
 
 resource "aws_route53_zone" "dns_zone" {
-  name = local.fqdn
-  tags = module.label.tags
+  provider = aws.member_account
+  name     = local.fqdn
+  tags     = module.label.tags
 }
 
 data "aws_route53_zone" "parent" {
-  provider  = "aws.parent-zone-account"
   count     = var.parent_domain_name == "" ? 0 : 1
   name      = var.parent_domain_name
 }
 
 resource "aws_route53_record" "ns" {
-  provider        = "aws.parent-zone-account"
   count           = var.parent_domain_name == "" ? 0 : 1
   zone_id         = element(data.aws_route53_zone.parent.*.zone_id, 0)
   name            = local.fqdn
@@ -47,9 +46,12 @@ resource "aws_route53_record" "ns" {
 
 module "acm" {
   source                            = "git::https://github.com/cloudposse/terraform-aws-acm-request-certificate.git?ref=tags/0.4.0"
-  subject_alternative_names         = concat([format("*.%s", local.fqdn)], var.certificate_alternative_names)
+  subject_alternative_names         = distinct(concat([format("*.%s", local.fqdn)], var.certificate_alternative_names))
   enabled                           = var.certificate_enabled
   domain_name                       = local.fqdn
   process_domain_validation_options = true
   wait_for_certificate_issued       = true
+  providers                         = {
+    aws = aws.member_account
+  }
 }
