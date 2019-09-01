@@ -33,6 +33,12 @@ variable "parent_domain_name" {
   description = "Domain name of the parent hosted zone or the root domain zone"
 }
 
+variable "is_parent_private_zone" {
+  type        = bool
+  default     = false
+  description = "Whether the parent hosted zone is private or not"
+}
+
 variable "tld" {
   type        = string
   default     = "com"
@@ -66,4 +72,10 @@ variable "certificate_alternative_names" {
 variable "certificate_enabled" {
   default     = true
   description = "Whether an AWS ACM certificate should be issued for the domain"
+}
+
+variable "zone_vpcs" {
+  type        = list(string)
+  default     = []
+  description = "VPCs assigned to the new hosted zone. Assigning VPC to the zone makes it private."
 }

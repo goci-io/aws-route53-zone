@@ -22,21 +22,33 @@ resource "aws_route53_zone" "dns_zone" {
   provider = aws.member_account
   name     = local.fqdn
   tags     = module.label.tags
+
+  dynamic "vpc" {
+    iterator = zone
+    for_each = var.zone_vpcs
+
+    content {
+      vpc_id = zone.value
+    }
+  }
 }
 
 data "aws_route53_zone" "parent" {
-  count     = var.parent_domain_name == "" ? 0 : 1
-  name      = var.parent_domain_name
+  provider     = aws.parent_account
+  count        = var.parent_domain_name == "" ? 0 : 1
+  name         = format("%s.", var.parent_domain_name)
+  private_zone = var.is_parent_private_zone
 }
 
 resource "aws_route53_record" "ns" {
+  provider        = aws.parent_account
   count           = var.parent_domain_name == "" ? 0 : 1
   zone_id         = element(data.aws_route53_zone.parent.*.zone_id, 0)
   name            = local.fqdn
   allow_overwrite = true
   type            = "NS"
   ttl             = 300
-  records         = [
+  records = [
     aws_route53_zone.dns_zone.name_servers.0,
     aws_route53_zone.dns_zone.name_servers.1,
     aws_route53_zone.dns_zone.name_servers.2,
@@ -51,7 +63,7 @@ module "acm" {
   domain_name                       = local.fqdn
   process_domain_validation_options = true
   wait_for_certificate_issued       = true
-  providers                         = {
+  providers = {
     aws = aws.member_account
   }
 }

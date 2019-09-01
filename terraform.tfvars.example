@@ -20,3 +20,13 @@ namespace        = "goci"
 stage            = "staging"
 domain_name      = "apps.europe.staging.goci.io"
 parent_zone_name = "goci.io"
+
+# Creates domain apps.europe.staging.goci.io
+# Synchronizes Nameservers attached to goci.io with an additional NS entry
+# Creates a private hosted zone using the aws_assume_role_arn and attaches the VPC 12345678
+namespace           = "goci"
+stage               = "staging"
+domain_name         = "apps.europe.staging.goci.io"
+parent_zone_name    = "goci.io"
+aws_assume_role_arn = "arn:aws:iam::<ACCOUNT_ID>:role/<ROLE_NAME>"
+zone_vpcs           = ["vpc-12345678"]

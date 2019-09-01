@@ -20,7 +20,6 @@ module "zone" {
   stage               = "staging"
   attributes          = ["eu1"]
   parent_zone_name    = "goci.io"
-  aws_assume_role_arn = "arn:aws:iam::<ACCOUNT_ID>:role/<ROLE_NAME>"
 }
 ```
 _This example will result in a hosted zone with the name staging.eu1.goci.io with an additional NS entry in the parent zone_

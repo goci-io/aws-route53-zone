@@ -1,6 +1,6 @@
 terraform {
   required_version = ">= 0.12.1"
-  
+
   required_providers {
     aws   = "~> 2.25"
     null  = "~> 2.1"
@@ -9,6 +9,8 @@ terraform {
 }
 
 provider "aws" {
+  alias = "parent_account"
+
   assume_role {
     role_arn = var.aws_parent_account_assume_role_arn
   }
