@@ -56,11 +56,18 @@ resource "aws_route53_record" "ns" {
   ]
 }
 
+resource "null_resource" "await_zone" {
+  depends_on = [aws_route53_record.ns]
+  triggers   = {
+    domain_name = local.fqdn
+  }
+}
+
 module "acm" {
   source                            = "git::https://github.com/cloudposse/terraform-aws-acm-request-certificate.git?ref=tags/0.4.0"
   subject_alternative_names         = distinct(concat([format("*.%s", local.fqdn)], var.certificate_alternative_names))
+  domain_name                       = null_resource.await_zone.triggers.domain_name
   enabled                           = var.certificate_enabled
-  domain_name                       = local.fqdn
   process_domain_validation_options = true
   wait_for_certificate_issued       = true
   providers = {
