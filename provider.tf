@@ -11,15 +11,25 @@ terraform {
 provider "aws" {
   alias = "parent_account"
 
-  assume_role {
-    role_arn = var.aws_parent_account_assume_role_arn
+  dynamic "assume_role" {
+    iterator = role
+    for_each = var.aws_parent_account_assume_role_arn == "" ? [] : [var.aws_parent_account_assume_role_arn]
+
+    content {
+      role_arn = role.value
+    }
   }
 }
 
 provider "aws" {
   alias = "member_account"
 
-  assume_role {
-    role_arn = var.aws_assume_role_arn
+  dynamic "assume_role" {
+    iterator = role
+    for_each = var.aws_assume_role_arn == "" ? [] : [var.aws_assume_role_arn]
+
+    content {
+      role_arn = role.value
+    }
   }
 }
