@@ -57,7 +57,7 @@ resource "aws_route53_record" "ns" {
 }
 
 resource "null_resource" "await_zone" {
-  depends_on = [aws_route53_record.ns]
+  depends_on = [aws_route53_zone.dns_zone]
   triggers   = {
     domain_name = local.fqdn
   }
