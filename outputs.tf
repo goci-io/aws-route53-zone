@@ -12,7 +12,7 @@ output "domain_name" {
 }
 
 output "certificate_arn" {
-  value = aws_acm_certificate.default.arn
+  value = join("", aws_acm_certificate.default.*.arn)
 }
 
 output "certificate_validation_options" {
