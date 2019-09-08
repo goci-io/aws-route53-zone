@@ -6,6 +6,7 @@ locals {
   fqdn         = var.domain_name == "" ? format("%s.%s", module.label.id, local.tld) : var.domain_name
   vpc_ids      = var.vpc_module_state == "" ? var.zone_vpcs : [data.terraform_remote_state.vpc[0].outputs.vpc_id]
   label_order  = contains(local.prod_stages, var.stage) && var.omit_prod_stage ? ["name", "attributes", "namespace"] : ["name", "stage", "attributes", "namespace"]
+  domain_validation_options_list = var.certificate_enabled ? aws_acm_certificate.default.0.domain_validation_options : []
 }
 
 data "terraform_remote_state" "vpc" {
@@ -67,22 +68,34 @@ resource "aws_route53_record" "ns" {
   ]
 }
 
-resource "null_resource" "await_zone" {
-  depends_on = [aws_route53_zone.dns_zone]
-  triggers   = {
-    domain_name = local.fqdn
+resource "aws_acm_certificate" "default" {
+  count                     = var.certificate_enabled ? 1 : 0
+  provider                  = aws.member_account
+  depends_on                = [aws_route53_zone.dns_zone]
+  tags                      = module.label.tags
+  domain_name               = local.fqdn
+  validation_method         = var.validation_method
+  subject_alternative_names = distinct(concat([format("*.%s", local.fqdn)], var.certificate_alternative_names))
+
+  lifecycle {
+    create_before_destroy = true
   }
 }
 
-module "acm" {
-  source                            = "git::https://github.com/cloudposse/terraform-aws-acm-request-certificate.git?ref=tags/0.4.0"
-  subject_alternative_names         = distinct(concat([format("*.%s", local.fqdn)], var.certificate_alternative_names))
-  domain_name                       = null_resource.await_zone.triggers.domain_name
-  enabled                           = var.certificate_enabled
-  process_domain_validation_options = true
-  wait_for_certificate_issued       = true
+resource "aws_route53_record" "default" {
+  count           = var.certificate_enabled ? 1 : 0
+  provider        = aws.member_account
+  zone_id         = aws_route53_zone.dns_zone.zone_id
+  name            = lookup(local.domain_validation_options_list[count.index], "resource_record_name")
+  type            = lookup(local.domain_validation_options_list[count.index], "resource_record_type")
+  records         = [lookup(local.domain_validation_options_list[count.index], "resource_record_value")]
+  allow_overwrite = true
+  ttl             = 300
+}
 
-  providers = {
-    aws = aws.member_account
-  }
+resource "aws_acm_certificate_validation" "default" {
+  count                   = var.certificate_enabled ? 1 : 0
+  provider                = aws.member_account
+  validation_record_fqdns = local.fqdn
+  certificate_arn         = join("", aws_acm_certificate.default.*.arn)
 }
