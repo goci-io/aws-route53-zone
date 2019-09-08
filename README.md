@@ -36,10 +36,10 @@ Look into the [terraform.tfvars](terraform.tfvars.example) to see more examples.
 | attributes | Additional attributes (e.g. `["eu1"]`) | `[]` | 
 | tags | Additional tags (e.g. `map("BusinessUnit", "XYZ")` | `{}` | 
 | domain_name | Overwrite auto generated domain name | "" |
-| tld | The top level domain to use if specified via `domain_name` or `parent_domain_name` | - |
+| tld | The top level domain to use if not already specified via `domain_name` or `parent_domain_name` | - |
 | parent_domain_name | The parent hosted zone to sync Nameservers with | "" |
 | is_parent_private_zone | Whether the parent hosted zone is private | false |
-| certificate_enabled | Whether to create an AWS ACM certificate | true |
+| certificate_enabled | Whether to create an AWS ACM certificate | true |
 | certificate_alternative_names | Additional domains to include in the certificate. Includes always *.<domain> | `[]` |
 | omit_prod_stage | Whether the prod stage should be omitted from the zone name (when stage is prod, production or main) | true |
 | zone_vpcs | VPC IDs to attach to the hosted zone. This makes the hosted zone private. | `[]` |
