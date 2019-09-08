@@ -29,7 +29,7 @@ Look into the [terraform.tfvars](terraform.tfvars.example) to see more examples.
 ### Configuration
 
 | Name | Description | Default |
-|------------------|---------------------------------------------|---------|
+|-----------------|----------------------------------------|---------|
 | namespace | The company or organization prefix (eg: goci) | - |
 | stage | The stage this configuration is for (eg: staging or prod) | - |
 | name | Optional name (subdomain) for this hosted zone | "" |
