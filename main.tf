@@ -96,6 +96,6 @@ resource "aws_route53_record" "default" {
 resource "aws_acm_certificate_validation" "default" {
   count                   = var.certificate_enabled ? 1 : 0
   provider                = aws.member_account
-  validation_record_fqdns = local.fqdn
+  validation_record_fqdns = [local.fqdn]
   certificate_arn         = join("", aws_acm_certificate.default.*.arn)
 }

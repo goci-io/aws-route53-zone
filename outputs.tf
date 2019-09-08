@@ -12,9 +12,9 @@ output "domain_name" {
 }
 
 output "certificate_arn" {
-  value = module.acm.arn
+  value = aws_acm_certificate.default.arn
 }
 
 output "certificate_validation_options" {
-  value = module.acm.domain_validation_options
+  value = aws_acm_certificate.default.*.domain_validation_options
 }
