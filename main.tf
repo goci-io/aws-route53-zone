@@ -6,6 +6,8 @@ locals {
   fqdn         = var.domain_name == "" ? format("%s.%s", module.label.id, local.tld) : var.domain_name
   vpc_ids      = var.vpc_module_state == "" ? var.zone_vpcs : concat(var.zone_vpcs, [data.terraform_remote_state.vpc[0].outputs.vpc_id])
   label_order  = contains(local.prod_stages, var.stage) && var.omit_prod_stage ? ["name", "attributes", "namespace"] : ["name", "stage", "attributes", "namespace"]
+
+  subject_alternative_names      = distinct(concat([format("*.%s", local.fqdn)], var.certificate_alternative_names))
   domain_validation_options_list = var.certificate_enabled ? aws_acm_certificate.default.0.domain_validation_options : []
 }
 
@@ -74,8 +76,8 @@ resource "aws_acm_certificate" "default" {
   depends_on                = [aws_route53_zone.dns_zone]
   tags                      = module.label.tags
   domain_name               = local.fqdn
+  subject_alternative_names = local.subject_alternative_names
   validation_method         = "DNS"
-  subject_alternative_names = distinct(concat([format("*.%s", local.fqdn)], var.certificate_alternative_names))
 
   lifecycle {
     create_before_destroy = true
@@ -96,6 +98,6 @@ resource "aws_route53_record" "default" {
 resource "aws_acm_certificate_validation" "default" {
   count                   = var.certificate_enabled ? 1 : 0
   provider                = aws.member_account
-  validation_record_fqdns = [local.fqdn]
   certificate_arn         = join("", aws_acm_certificate.default.*.arn)
+  validation_record_fqdns = concat(local.subject_alternative_names, [local.fqdn])
 }
