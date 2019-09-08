@@ -84,7 +84,7 @@ resource "aws_acm_certificate" "default" {
   }
 }
 
-resource "aws_route53_record" "default" {
+resource "aws_route53_record" "validation" {
   count           = var.certificate_enabled ? 1 : 0
   provider        = aws.member_account
   zone_id         = aws_route53_zone.dns_zone.zone_id
@@ -98,6 +98,7 @@ resource "aws_route53_record" "default" {
 resource "aws_acm_certificate_validation" "default" {
   count                   = var.certificate_enabled ? 1 : 0
   provider                = aws.member_account
+  depends_on              = [aws_route53_record.validation]
   certificate_arn         = join("", aws_acm_certificate.default.*.arn)
   validation_record_fqdns = concat(local.subject_alternative_names, [local.fqdn])
 }
