@@ -4,7 +4,7 @@ locals {
   tld          = element(local.domain_parts, length(local.domain_parts) - 1)
   domain_parts = var.parent_domain_name == "" ? [var.tld] : split(".", var.parent_domain_name)
   fqdn         = var.domain_name == "" ? format("%s.%s", module.label.id, local.tld) : var.domain_name
-  vpc_ids      = var.vpc_module_state == "" ? var.zone_vpcs : [data.terraform_remote_state.vpc[0].outputs.vpc_id]
+  vpc_ids      = var.vpc_module_state == "" ? var.zone_vpcs : concat(var.zone_vpcs, [data.terraform_remote_state.vpc[0].outputs.vpc_id])
   label_order  = contains(local.prod_stages, var.stage) && var.omit_prod_stage ? ["name", "attributes", "namespace"] : ["name", "stage", "attributes", "namespace"]
   domain_validation_options_list = var.certificate_enabled ? aws_acm_certificate.default.0.domain_validation_options : []
 }
