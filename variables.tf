@@ -51,6 +51,12 @@ variable "domain_name" {
   description = "Fully qualified domain to create the hosted zone for (if not automatically build from label)"
 }
 
+variable "omit_prod_stage" {
+  type        = bool
+  default     = true
+  description = "If true the prod stage will be omitted in the dns zone if it equals one of prod, main or production"
+}
+
 variable "aws_assume_role_arn" {
   type        = string
   default     = ""

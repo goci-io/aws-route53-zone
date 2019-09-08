@@ -5,7 +5,7 @@ locals {
   domain_parts = var.parent_domain_name == "" ? [var.tld] : split(".", var.parent_domain_name)
   fqdn         = var.domain_name == "" ? format("%s.%s", module.label.id, local.tld) : var.domain_name
   vpc_ids      = var.vpc_module_state == "" ? var.zone_vpcs : [data.terraform_remote_state.vpc[0].outputs.vpc_id]
-  label_order  = contains(local.prod_stages, var.stage) ? ["name", "attributes", "namespace"] : ["name", "stage", "attributes", "namespace"]
+  label_order  = contains(local.prod_stages, var.stage) && var.omit_prod_stage ? ["name", "attributes", "namespace"] : ["name", "stage", "attributes", "namespace"]
 }
 
 data "terraform_remote_state" "vpc" {
@@ -81,6 +81,7 @@ module "acm" {
   enabled                           = var.certificate_enabled
   process_domain_validation_options = true
   wait_for_certificate_issued       = true
+
   providers = {
     aws = aws.member_account
   }
