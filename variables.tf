@@ -79,3 +79,15 @@ variable "zone_vpcs" {
   default     = []
   description = "VPCs assigned to the new hosted zone. Assigning VPC to the zone makes it private."
 }
+
+variable "tf_bucket" {
+  type        = string
+  default     = ""
+  description = "The Bucket name to load remote state from"
+}
+
+variable "vpc_module_state" {
+  type        = string
+  default     = ""
+  description = "The key or path to the state where a VPC module was installed. It must expose a vpc_id output"
+}

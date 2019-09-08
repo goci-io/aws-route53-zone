@@ -4,7 +4,18 @@ locals {
   tld          = element(local.domain_parts, length(local.domain_parts) - 1)
   domain_parts = var.parent_domain_name == "" ? [var.tld] : split(".", var.parent_domain_name)
   fqdn         = var.domain_name == "" ? format("%s.%s", module.label.id, local.tld) : var.domain_name
+  vpc_ids      = var.vpc_module_state == "" ? var.zone_vpcs : [data.terraform_remote_state.vpc[0].outputs.vpc_id]
   label_order  = contains(local.prod_stages, var.stage) ? ["name", "attributes", "namespace"] : ["name", "stage", "attributes", "namespace"]
+}
+
+data "terraform_remote_state" "vpc" {
+  count   = var.vpc_module_state == "" ? 0 : 1
+  backend = "s3"
+
+  config = {
+    bucket = var.tf_bucket
+    key    = var.vpc_module_state
+  }
 }
 
 module "label" {
@@ -25,7 +36,7 @@ resource "aws_route53_zone" "dns_zone" {
 
   dynamic "vpc" {
     iterator = zone
-    for_each = var.zone_vpcs
+    for_each = local.vpc_ids
 
     content {
       vpc_id = zone.value
