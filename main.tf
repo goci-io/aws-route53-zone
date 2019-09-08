@@ -74,7 +74,7 @@ resource "aws_acm_certificate" "default" {
   depends_on                = [aws_route53_zone.dns_zone]
   tags                      = module.label.tags
   domain_name               = local.fqdn
-  validation_method         = var.validation_method
+  validation_method         = "DNS"
   subject_alternative_names = distinct(concat([format("*.%s", local.fqdn)], var.certificate_alternative_names))
 
   lifecycle {
