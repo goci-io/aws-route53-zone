@@ -1,11 +1,13 @@
 
 locals {
   prod_stages    = ["prod", "production", "main"]
-  is_private     = length(local.vpc_ids) > 0
+  use_public     = length(local.vpc_ids) > 0 && var.create_public_zone
   tld            = element(local.domain_parts, length(local.domain_parts) - 1)
   vpc_ids        = concat(var.zone_vpcs, data.terraform_remote_state.vpc.*.outputs.vpc_id)
   domain_parts   = var.parent_domain_name == "" ? [var.tld] : split(".", var.parent_domain_name)
   fqdn           = var.domain_name == "" ? format("%s.%s", module.label.id, local.tld) : var.domain_name
+  public_zone_id = local.use_public ? aws_route53_zone.public_zone[0].zone_id : aws_route53_zone.dns_zone.zone_id
+  public_ns      = local.use_public ? aws_route53_zone.public_zone[0].name_servers : aws_route53_zone.dns_zone.name_servers
   label_order    = contains(local.prod_stages, var.stage) && var.omit_prod_stage ? ["name", "attributes", "namespace"] : ["name", "stage", "attributes", "namespace"]
   tag_overwrites = { 
     Name = format("ACM %s", var.name == "" ? local.fqdn : var.name) 
@@ -53,7 +55,7 @@ resource "aws_route53_zone" "dns_zone" {
 
 resource "aws_route53_zone" "public_zone" {
   provider = aws.member_account
-  count    = local.is_private ? 1 : 0
+  count    = local.use_public ? 1 : 0
   tags     = merge(module.label.tags, { UtilityZone = "true" })
   name     = local.fqdn
 }
@@ -75,10 +77,10 @@ resource "aws_route53_record" "ns" {
   ttl             = 300
 
   records = [
-    aws_route53_zone.dns_zone.name_servers.0,
-    aws_route53_zone.dns_zone.name_servers.1,
-    aws_route53_zone.dns_zone.name_servers.2,
-    aws_route53_zone.dns_zone.name_servers.3,
+    local.public_ns.0,
+    local.public_ns.1,
+    local.public_ns.2,
+    local.public_ns.3,
   ]
 }
 
@@ -99,7 +101,7 @@ resource "aws_acm_certificate" "default" {
 resource "aws_route53_record" "validation" {
   count           = var.certificate_enabled ? 1 : 0
   provider        = aws.member_account
-  zone_id         = local.is_private ? aws_route53_zone.public_zone.zone_id : aws_route53_zone.dns_zone.zone_id
+  zone_id         = local.public_zone_id
   name            = lookup(local.domain_validation_options_list[count.index], "resource_record_name")
   type            = lookup(local.domain_validation_options_list[count.index], "resource_record_type")
   records         = [lookup(local.domain_validation_options_list[count.index], "resource_record_value")]

@@ -42,6 +42,7 @@ Look into the [terraform.tfvars](terraform.tfvars.example) to see more examples.
 | certificate_enabled | Whether to create an AWS ACM certificate | true |
 | certificate_alternative_names | Additional domains to include in the certificate. Includes always *.<domain> | `[]` |
 | omit_prod_stage | Whether the prod stage should be omitted from the zone name (when stage is prod, production or main) | true |
+| create_public_zone | If the new hosted zone is private and you want to validate for example an ACM certificate an additional public zone can be created | true |
 | zone_vpcs | VPC IDs to attach to the hosted zone. This makes the hosted zone private. | `[]` |
 | tf_bucket | The bucket name to read the remote state from (required if vpc_module_state is used) | "" |
 | vpc_module_state | The key to the state file of an vpc module. Must expose `vpc_id` output | "" |

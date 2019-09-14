@@ -80,6 +80,12 @@ variable "certificate_enabled" {
   description = "Whether an AWS ACM certificate should be issued for the domain"
 }
 
+variable "create_public_zone" {
+  type        = bool
+  default     = true
+  description = "If the new hosted zone is private and you want to validate for example an ACM certificate an additional public zone can be created"  
+}
+
 variable "zone_vpcs" {
   type        = list(string)
   default     = []
