@@ -8,8 +8,8 @@ locals {
   label_order  = contains(local.prod_stages, var.stage) && var.omit_prod_stage ? ["name", "attributes", "namespace"] : ["name", "stage", "attributes", "namespace"]
 
   validation_records_fqdns       = concat(local.subject_alternative_names, [local.fqdn])
-  domain_validation_options_list = aws_acm_certificate.default.*.domain_validation_options
   subject_alternative_names      = distinct(concat([format("*.%s", local.fqdn)], var.certificate_alternative_names))
+  domain_validation_options_list = var.certificate_enabled ? aws_acm_certificate.default[0].domain_validation_options : []
 }
 
 data "terraform_remote_state" "vpc" {
@@ -90,9 +90,9 @@ resource "aws_route53_record" "validation" {
   count           = var.certificate_enabled ? 1 : 0
   provider        = aws.member_account
   zone_id         = aws_route53_zone.dns_zone.zone_id
-  name            = lookup(local.domain_validation_options_list, "resource_record_name")
-  type            = lookup(local.domain_validation_options_list, "resource_record_type")
-  records         = [lookup(local.domain_validation_options_list, "resource_record_value")]
+  name            = lookup(local.domain_validation_options_list[count.index], "resource_record_name")
+  type            = lookup(local.domain_validation_options_list[count.index], "resource_record_type")
+  records         = [lookup(local.domain_validation_options_list[count.index], "resource_record_value")]
   allow_overwrite = true
   ttl             = 300
 }
