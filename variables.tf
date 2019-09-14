@@ -51,6 +51,12 @@ variable "domain_name" {
   description = "Fully qualified domain to create the hosted zone for (if not automatically build from label)"
 }
 
+variable "omit_prod_stage" {
+  type        = bool
+  default     = true
+  description = "If true the prod stage will be omitted in the dns zone if it equals one of prod, main or production"
+}
+
 variable "aws_assume_role_arn" {
   type        = string
   default     = ""
@@ -74,8 +80,26 @@ variable "certificate_enabled" {
   description = "Whether an AWS ACM certificate should be issued for the domain"
 }
 
+variable "create_public_zone" {
+  type        = bool
+  default     = true
+  description = "If the new hosted zone is private and you want to validate for example an ACM certificate an additional public zone can be created"  
+}
+
 variable "zone_vpcs" {
   type        = list(string)
   default     = []
   description = "VPCs assigned to the new hosted zone. Assigning VPC to the zone makes it private."
+}
+
+variable "tf_bucket" {
+  type        = string
+  default     = ""
+  description = "The Bucket name to load remote state from"
+}
+
+variable "vpc_module_state" {
+  type        = string
+  default     = ""
+  description = "The key or path to the state where a VPC module was installed. It must expose a vpc_id output"
 }

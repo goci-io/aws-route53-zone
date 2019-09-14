@@ -21,6 +21,15 @@ stage            = "staging"
 domain_name      = "apps.europe.staging.goci.io"
 parent_zone_name = "goci.io"
 
+# Creates domain apps.europe.goci.io
+# Set omit_prod_stage to false to create apps.prod.europe.goci.io
+# Synchronizes Nameservers attached to goci.io with an additional NS entry
+namespace        = "goci"
+stage            = "prod"
+attributes       = ["europe"]
+parent_zone_name = "goci.io"
+name             = "apps"
+
 # Creates domain apps.europe.staging.goci.io
 # Synchronizes Nameservers attached to goci.io with an additional NS entry
 # Creates a private hosted zone using the aws_assume_role_arn and attaches the VPC 12345678

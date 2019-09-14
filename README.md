@@ -24,4 +24,27 @@ module "zone" {
 ```
 _This example will result in a hosted zone with the name staging.eu1.goci.io with an additional NS entry in the parent zone_
 
-Look into the [terraform.tfvars](terraform.tfvars.example) for more examples.
+Look into the [terraform.tfvars](terraform.tfvars.example) to see more examples.
+
+### Configuration
+
+| Name | Description | Default |
+|-----------------|----------------------------------------|---------|
+| namespace | The company or organization prefix (eg: goci) | - |
+| stage | The stage this configuration is for (eg: staging or prod) | - |
+| name | Optional name (subdomain) for this hosted zone | "" |
+| attributes | Additional attributes (e.g. `["eu1"]`) | `[]` | 
+| tags | Additional tags (e.g. `map("BusinessUnit", "XYZ")` | `{}` | 
+| domain_name | Overwrite auto generated domain name | "" |
+| tld | The top level domain to use if not already specified via `domain_name` or `parent_domain_name` | - |
+| parent_domain_name | The parent hosted zone to sync Nameservers with | "" |
+| is_parent_private_zone | Whether the parent hosted zone is private | false |
+| certificate_enabled | Whether to create an AWS ACM certificate | true |
+| certificate_alternative_names | Additional domains to include in the certificate. Includes always *.<domain> | `[]` |
+| omit_prod_stage | Whether the prod stage should be omitted from the zone name (when stage is prod, production or main) | true |
+| create_public_zone | If the new hosted zone is private and you want to validate for example an ACM certificate an additional public zone can be created | true |
+| zone_vpcs | VPC IDs to attach to the hosted zone. This makes the hosted zone private. | `[]` |
+| tf_bucket | The bucket name to read the remote state from (required if vpc_module_state is used) | "" |
+| vpc_module_state | The key to the state file of an vpc module. Must expose `vpc_id` output | "" |
+| aws_assume_role_arn | A role to assume to create the hosted zone and certificate in | "" |
+| aws_parent_account_assume_role_arn | A role to assume to create the NS record in the parent zone | "" |

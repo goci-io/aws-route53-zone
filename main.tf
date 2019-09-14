@@ -1,10 +1,30 @@
 
 locals {
-  prod_stages  = ["prod", "production", "main"]
-  tld          = element(local.domain_parts, length(local.domain_parts) - 1)
-  domain_parts = var.parent_domain_name == "" ? [var.tld] : split(".", var.parent_domain_name)
-  fqdn         = var.domain_name == "" ? format("%s.%s", module.label.id, local.tld) : var.domain_name
-  label_order  = contains(local.prod_stages, var.stage) ? ["name", "attributes", "namespace"] : ["name", "stage", "attributes", "namespace"]
+  prod_stages    = ["prod", "production", "main"]
+  use_public     = length(local.vpc_ids) > 0 && var.create_public_zone
+  tld            = element(local.domain_parts, length(local.domain_parts) - 1)
+  vpc_ids        = concat(var.zone_vpcs, data.terraform_remote_state.vpc.*.outputs.vpc_id)
+  domain_parts   = var.parent_domain_name == "" ? [var.tld] : split(".", var.parent_domain_name)
+  fqdn           = var.domain_name == "" ? format("%s.%s", module.label.id, local.tld) : var.domain_name
+  public_zone_id = local.use_public ? aws_route53_zone.public_zone[0].zone_id : aws_route53_zone.dns_zone.zone_id
+  public_ns      = local.use_public ? aws_route53_zone.public_zone[0].name_servers : aws_route53_zone.dns_zone.name_servers
+  label_order    = contains(local.prod_stages, var.stage) && var.omit_prod_stage ? ["name", "attributes", "namespace"] : ["name", "stage", "attributes", "namespace"]
+  tag_overwrites = { 
+    Name = format("ACM %s", var.name == "" ? local.fqdn : var.name) 
+  }
+
+  subject_alternative_names      = distinct(concat([format("*.%s", local.fqdn)], var.certificate_alternative_names))
+  domain_validation_options_list = var.certificate_enabled ? aws_acm_certificate.default[0].domain_validation_options : []
+}
+
+data "terraform_remote_state" "vpc" {
+  count   = var.vpc_module_state == "" ? 0 : 1
+  backend = "s3"
+
+  config = {
+    bucket = var.tf_bucket
+    key    = var.vpc_module_state
+  }
 }
 
 module "label" {
@@ -12,9 +32,9 @@ module "label" {
   namespace   = var.namespace
   stage       = var.stage
   attributes  = var.attributes
-  tags        = var.tags
   name        = var.name
   label_order = local.label_order
+  tags        = merge(var.tags, local.tag_overwrites)
   delimiter   = "."
 }
 
@@ -25,12 +45,19 @@ resource "aws_route53_zone" "dns_zone" {
 
   dynamic "vpc" {
     iterator = zone
-    for_each = var.zone_vpcs
+    for_each = local.vpc_ids
 
     content {
       vpc_id = zone.value
     }
   }
+}
+
+resource "aws_route53_zone" "public_zone" {
+  provider = aws.member_account
+  count    = local.use_public ? 1 : 0
+  tags     = merge(module.label.tags, { UtilityZone = "true" })
+  name     = local.fqdn
 }
 
 data "aws_route53_zone" "parent" {
@@ -48,29 +75,44 @@ resource "aws_route53_record" "ns" {
   allow_overwrite = true
   type            = "NS"
   ttl             = 300
+
   records = [
-    aws_route53_zone.dns_zone.name_servers.0,
-    aws_route53_zone.dns_zone.name_servers.1,
-    aws_route53_zone.dns_zone.name_servers.2,
-    aws_route53_zone.dns_zone.name_servers.3,
+    local.public_ns.0,
+    local.public_ns.1,
+    local.public_ns.2,
+    local.public_ns.3,
   ]
 }
 
-resource "null_resource" "await_zone" {
-  depends_on = [aws_route53_zone.dns_zone]
-  triggers   = {
-    domain_name = local.fqdn
+resource "aws_acm_certificate" "default" {
+  count                     = var.certificate_enabled ? 1 : 0
+  provider                  = aws.member_account
+  depends_on                = [aws_route53_zone.dns_zone]
+  tags                      = module.label.tags
+  domain_name               = local.fqdn
+  subject_alternative_names = local.subject_alternative_names
+  validation_method         = "DNS"
+
+  lifecycle {
+    create_before_destroy = true
   }
 }
 
-module "acm" {
-  source                            = "git::https://github.com/cloudposse/terraform-aws-acm-request-certificate.git?ref=tags/0.4.0"
-  subject_alternative_names         = distinct(concat([format("*.%s", local.fqdn)], var.certificate_alternative_names))
-  domain_name                       = null_resource.await_zone.triggers.domain_name
-  enabled                           = var.certificate_enabled
-  process_domain_validation_options = true
-  wait_for_certificate_issued       = true
-  providers = {
-    aws = aws.member_account
-  }
+resource "aws_route53_record" "validation" {
+  count           = var.certificate_enabled ? 1 : 0
+  provider        = aws.member_account
+  zone_id         = local.public_zone_id
+  name            = lookup(local.domain_validation_options_list[count.index], "resource_record_name")
+  type            = lookup(local.domain_validation_options_list[count.index], "resource_record_type")
+  records         = [lookup(local.domain_validation_options_list[count.index], "resource_record_value")]
+  allow_overwrite = true
+  ttl             = 300
+}
+
+resource "aws_acm_certificate_validation" "default" {
+  count                   = var.certificate_enabled ? 1 : 0
+  provider                = aws.member_account
+  depends_on              = [aws_route53_record.validation]
+  certificate_arn         = join("", aws_acm_certificate.default.*.arn)
+  validation_record_fqdns = aws_route53_record.validation.*.fqdn
 }
