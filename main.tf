@@ -1,6 +1,7 @@
 
 locals {
   prod_stages    = ["prod", "production", "main"]
+  is_private     = length(local.vpc_ids) > 0
   tld            = element(local.domain_parts, length(local.domain_parts) - 1)
   vpc_ids        = concat(var.zone_vpcs, data.terraform_remote_state.vpc.*.outputs.vpc_id)
   domain_parts   = var.parent_domain_name == "" ? [var.tld] : split(".", var.parent_domain_name)
@@ -50,6 +51,13 @@ resource "aws_route53_zone" "dns_zone" {
   }
 }
 
+resource "aws_route53_zone" "public_zone" {
+  provider = aws.member_account
+  count    = local.is_private ? 1 : 0
+  tags     = merge(module.label.tags, { UtilityZone = "true" })
+  name     = local.fqdn
+}
+
 data "aws_route53_zone" "parent" {
   provider     = aws.parent_account
   count        = var.parent_domain_name == "" ? 0 : 1
@@ -91,7 +99,7 @@ resource "aws_acm_certificate" "default" {
 resource "aws_route53_record" "validation" {
   count           = var.certificate_enabled ? 1 : 0
   provider        = aws.member_account
-  zone_id         = aws_route53_zone.dns_zone.zone_id
+  zone_id         = local.is_private ? aws_route53_zone.public_zone.zone_id : aws_route53_zone.dns_zone.zone_id
   name            = lookup(local.domain_validation_options_list[count.index], "resource_record_name")
   type            = lookup(local.domain_validation_options_list[count.index], "resource_record_type")
   records         = [lookup(local.domain_validation_options_list[count.index], "resource_record_value")]
