@@ -1,11 +1,14 @@
 
 locals {
-  prod_stages  = ["prod", "production", "main"]
-  tld          = element(local.domain_parts, length(local.domain_parts) - 1)
-  vpc_ids      = concat(var.zone_vpcs, data.terraform_remote_state.vpc.*.outputs.vpc_id)
-  domain_parts = var.parent_domain_name == "" ? [var.tld] : split(".", var.parent_domain_name)
-  fqdn         = var.domain_name == "" ? format("%s.%s", module.label.id, local.tld) : var.domain_name
-  label_order  = contains(local.prod_stages, var.stage) && var.omit_prod_stage ? ["name", "attributes", "namespace"] : ["name", "stage", "attributes", "namespace"]
+  prod_stages    = ["prod", "production", "main"]
+  tld            = element(local.domain_parts, length(local.domain_parts) - 1)
+  vpc_ids        = concat(var.zone_vpcs, data.terraform_remote_state.vpc.*.outputs.vpc_id)
+  domain_parts   = var.parent_domain_name == "" ? [var.tld] : split(".", var.parent_domain_name)
+  fqdn           = var.domain_name == "" ? format("%s.%s", module.label.id, local.tld) : var.domain_name
+  label_order    = contains(local.prod_stages, var.stage) && var.omit_prod_stage ? ["name", "attributes", "namespace"] : ["name", "stage", "attributes", "namespace"]
+  tag_overwrites = { 
+    Name = format("ACM %s", var.name == "" ? local.fqdn : var.name) 
+  }
 
   subject_alternative_names      = distinct(concat([format("*.%s", local.fqdn)], var.certificate_alternative_names))
   domain_validation_options_list = var.certificate_enabled ? aws_acm_certificate.default[0].domain_validation_options : []
@@ -26,9 +29,9 @@ module "label" {
   namespace   = var.namespace
   stage       = var.stage
   attributes  = var.attributes
-  tags        = var.tags
   name        = var.name
   label_order = local.label_order
+  tags        = merge(var.tags, local.tag_overwrites)
   delimiter   = "."
 }
 
