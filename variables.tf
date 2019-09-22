@@ -92,6 +92,12 @@ variable "zone_vpcs" {
   description = "VPCs assigned to the new hosted zone. Assigning VPC to the zone makes it private."
 }
 
+variable "external_zone_vpcs" {
+  type        = map(string)
+  default     = {}
+  description = "Map of VPC IDs and region as value from external AWS accounts to create route53 zone association for"
+}
+
 variable "tf_bucket" {
   type        = string
   default     = ""

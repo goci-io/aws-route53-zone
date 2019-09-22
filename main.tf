@@ -1,15 +1,16 @@
 
 locals {
-  prod_stages    = ["prod", "production", "main"]
-  use_public     = length(local.vpc_ids) > 0 && var.create_public_zone
-  tld            = element(local.domain_parts, length(local.domain_parts) - 1)
-  domain_parts   = var.parent_domain_name == "" ? [var.tld] : split(".", var.parent_domain_name)
-  fqdn           = var.domain_name == "" ? format("%s.%s", module.label.id, local.tld) : var.domain_name
-  public_zone_id = local.use_public ? aws_route53_zone.public_zone[0].zone_id : aws_route53_zone.dns_zone.zone_id
-  public_ns      = local.use_public ? aws_route53_zone.public_zone[0].name_servers : aws_route53_zone.dns_zone.name_servers
-  vpc_ids        = var.vpc_module_state == "" ? var.zone_vpcs : concat(var.zone_vpcs, data.terraform_remote_state.vpc.*.outputs.vpc_id)
-  label_order    = contains(local.prod_stages, var.stage) && var.omit_prod_stage ? ["name", "attributes", "namespace"] : ["name", "stage", "attributes", "namespace"]
-  tag_overwrites = { 
+  prod_stages      = ["prod", "production", "main"]
+  external_vpc_ids = distinct(keys(var.external_zone_vpcs))
+  use_public       = length(local.vpc_ids) > 0 && var.create_public_zone
+  tld              = element(local.domain_parts, length(local.domain_parts) - 1)
+  domain_parts     = var.parent_domain_name == "" ? [var.tld] : split(".", var.parent_domain_name)
+  fqdn             = var.domain_name == "" ? format("%s.%s", module.label.id, local.tld) : var.domain_name
+  public_zone_id   = local.use_public ? aws_route53_zone.public_zone[0].zone_id : aws_route53_zone.dns_zone.zone_id
+  public_ns        = local.use_public ? aws_route53_zone.public_zone[0].name_servers : aws_route53_zone.dns_zone.name_servers
+  vpc_ids          = var.vpc_module_state == "" ? var.zone_vpcs : concat(var.zone_vpcs, data.terraform_remote_state.vpc.*.outputs.vpc_id)
+  label_order      = contains(local.prod_stages, var.stage) && var.omit_prod_stage ? ["name", "attributes", "namespace"] : ["name", "stage", "attributes", "namespace"]
+  tag_overwrites   = { 
     Name = format("ACM %s", var.name == "" ? local.fqdn : var.name) 
   }
 
@@ -51,6 +52,13 @@ resource "aws_route53_zone" "dns_zone" {
       vpc_id = zone.value
     }
   }
+}
+
+resource "aws_route53_zone_association" "external_vpcs" {
+  count      = length(local.external_vpc_ids)
+  zone_id    = aws_route53_zone.dns_zone.zone_id
+  vpc_id     = element(local.external_vpc_ids, count.index)
+  vpc_region = lookup(var.external_vpc_ids, local.external_vpc_ids[count.index])
 }
 
 resource "aws_route53_zone" "public_zone" {
