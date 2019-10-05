@@ -17,6 +17,8 @@ locals {
   subject_alternative_names      = distinct(concat([format("*.%s", local.fqdn)], var.certificate_alternative_names))
   domain_validation_options_list = var.certificate_enabled ? aws_acm_certificate.default[0].domain_validation_options : []
 }
+  
+data "aws_region" "current" {}
 
 data "terraform_remote_state" "vpc" {
   count   = var.vpc_module_state == "" ? 0 : 1
@@ -58,7 +60,7 @@ resource "aws_route53_zone_association" "external_vpcs" {
   count      = length(local.external_vpc_ids)
   zone_id    = aws_route53_zone.dns_zone.zone_id
   vpc_id     = element(local.external_vpc_ids, count.index)
-  vpc_region = lookup(var.external_vpc_ids, local.external_vpc_ids[count.index])
+  vpc_region = lookup(var.external_zone_vpcs, local.external_vpc_ids[count.index], data.aws_region.current.name)
 }
 
 resource "aws_route53_zone" "public_zone" {
