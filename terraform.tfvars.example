@@ -33,6 +33,8 @@ name             = "apps"
 # Creates domain apps.europe.staging.goci.io
 # Synchronizes Nameservers attached to goci.io with an additional NS entry
 # Creates a private hosted zone using the aws_assume_role_arn and attaches the VPC 12345678
+# To validate the certificate an additional public hosted zone will be created. The nameservers are synced with the public one.
+# Disable public hosted zone creation by setting create_public_zone to false
 namespace           = "goci"
 stage               = "staging"
 domain_name         = "apps.europe.staging.goci.io"
