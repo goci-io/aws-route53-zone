@@ -15,7 +15,7 @@ locals {
   }
 
   subject_alternative_names      = distinct(concat([format("*.%s", local.fqdn)], var.certificate_alternative_names))
-  domain_validation_options_list = var.certificate_enabled ? join("", aws_acm_certificate.default.*.domain_validation_options) : []
+  domain_validation_options_list = var.certificate_enabled ? aws_acm_certificate.default.*.domain_validation_options : []
 }
   
 data "aws_region" "current" {}
