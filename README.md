@@ -35,6 +35,7 @@ Look into the [terraform.tfvars](terraform.tfvars.example) to see more examples.
 | name | Optional name (subdomain) for this hosted zone | "" |
 | attributes | Additional attributes (e.g. `["eu1"]`) | `[]` | 
 | tags | Additional tags (e.g. `map("BusinessUnit", "XYZ")` | `{}` | 
+| delimiter | Delimiter between namespace, stage, name and attributes | `-` |
 | domain_name | Overwrite auto generated domain name | "" |
 | tld | The top level domain to use if not already specified via `domain_name` or `parent_domain_name` | - |
 | parent_domain_name | The parent hosted zone to sync Nameservers with | "" |
