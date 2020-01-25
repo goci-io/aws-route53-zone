@@ -112,9 +112,9 @@ resource "aws_route53_record" "validation" {
   count           = var.certificate_enabled ? 1 : 0
   provider        = aws.member_account
   zone_id         = local.public_zone_id
-  name            = lookup(local.domain_validation_options_list[count.index], "resource_record_name")
-  type            = lookup(local.domain_validation_options_list[count.index], "resource_record_type")
-  records         = [lookup(local.domain_validation_options_list[count.index], "resource_record_value")]
+  name            = lookup(local.domain_validation_options_list[count.index].0, "resource_record_name")
+  type            = lookup(local.domain_validation_options_list[count.index].0, "resource_record_type")
+  records         = [lookup(local.domain_validation_options_list[count.index].0, "resource_record_value")]
   allow_overwrite = true
   ttl             = 300
 }
