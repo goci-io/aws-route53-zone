@@ -19,7 +19,7 @@ module "zone" {
   namespace           = "goci"
   stage               = "staging"
   attributes          = ["eu1"]
-  parent_zone_name    = "goci.io"
+  parent_domain_name  = "goci.io"
 }
 ```
 _This example will result in a hosted zone with the name staging.eu1.goci.io with an additional NS entry in the parent zone_
