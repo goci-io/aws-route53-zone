@@ -109,3 +109,8 @@ variable "vpc_module_state" {
   default     = ""
   description = "The key or path to the state where a VPC module was installed. It must expose a vpc_id output"
 }
+
+variable "enabled" {
+  default     = true
+  description = "Whether this module should be enabled"
+}
