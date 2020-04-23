@@ -1,6 +1,6 @@
 
 output "zone_id" {
-  value = aws_route53_zone.dns_zone.zone_id
+  value = aws_route53_zone.dns_zone.0.zone_id
 }
 
 output "public_zone_id" {
@@ -8,7 +8,7 @@ output "public_zone_id" {
 }
 
 output "name_servers" {
-  value = aws_route53_zone.dns_zone.name_servers
+  value = aws_route53_zone.dns_zone.0.name_servers
 }
 
 output "domain_name" {
