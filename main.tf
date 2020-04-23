@@ -6,8 +6,8 @@ locals {
   tld              = element(local.domain_parts, length(local.domain_parts) - 1)
   domain_parts     = var.parent_domain_name == "" ? [var.tld] : split(".", var.parent_domain_name)
   fqdn             = var.domain_name == "" ? format("%s.%s", module.label.id, local.tld) : var.domain_name
-  public_zone_id   = local.use_public ? join("", aws_route53_zone.public_zone.*.zone_id) : aws_route53_zone.dns_zone.zone_id
-  public_ns        = local.use_public ? flatten(aws_route53_zone.public_zone.*.name_servers) : aws_route53_zone.dns_zone.name_servers
+  public_zone_id   = local.use_public ? join("", aws_route53_zone.public_zone.*.zone_id) : aws_route53_zone.dns_zone.0.zone_id
+  public_ns        = local.use_public ? flatten(aws_route53_zone.public_zone.*.name_servers) : aws_route53_zone.dns_zone.0.name_servers
   vpc_ids          = var.vpc_module_state == "" ? var.zone_vpcs : concat(var.zone_vpcs, data.terraform_remote_state.vpc.*.outputs.vpc_id)
   label_order      = contains(local.prod_stages, var.stage) && var.omit_prod_stage ? ["name", "attributes", "namespace"] : ["name", "stage", "attributes", "namespace"]
   tag_overwrites = {
@@ -60,7 +60,7 @@ resource "aws_route53_zone" "dns_zone" {
 
 resource "aws_route53_zone_association" "external_vpcs" {
   count      = var.enabled ? length(local.external_vpc_ids) : 0
-  zone_id    = aws_route53_zone.dns_zone.zone_id
+  zone_id    = aws_route53_zone.dns_zone.0.zone_id
   vpc_id     = element(local.external_vpc_ids, count.index)
   vpc_region = lookup(var.external_zone_vpcs, local.external_vpc_ids[count.index], data.aws_region.current.name)
 }
