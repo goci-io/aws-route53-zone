@@ -2,6 +2,8 @@
 
 #### Maintained by [@goci-io/prp-terraform](https://github.com/orgs/goci-io/teams/prp-terraform)
 
+![Terraform Validate](https://github.com/goci-io/aws-route53-zone/workflows/Terraform%20Validate/badge.svg)
+
 This terraform module provisions a new AWS Route53 Hosted Zone. 
 
 If you need to delegate DNS from a different AWS Account or use a parent hosted zone the Nameservers are automatically synchronized by using the specified `aws_parent_account_assume_role_arn` to assume an external role defined in the AWS profile. The member account access can be specified using `aws_assume_role_arn` variable.
