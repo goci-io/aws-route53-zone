@@ -83,7 +83,7 @@ variable "certificate_enabled" {
 variable "create_public_zone" {
   type        = bool
   default     = true
-  description = "If the new hosted zone is private and you want to validate for example an ACM certificate an additional public zone can be created"  
+  description = "If the new hosted zone is private and you want to validate for example an ACM certificate an additional public zone can be created"
 }
 
 variable "zone_vpcs" {
