@@ -2,7 +2,7 @@
 
 #### Maintained by [@goci-io/prp-terraform](https://github.com/orgs/goci-io/teams/prp-terraform)
 
-![Terraform Validate](https://github.com/goci-io/aws-route53-zone/workflows/Terraform%20Validate/badge.svg)
+![Terraform Validate](https://github.com/goci-io/aws-route53-zone/workflows/Terraform%20Validate/badge.svg?branch=master&event=push)
 
 This terraform module provisions a new AWS Route53 Hosted Zone. 
 
