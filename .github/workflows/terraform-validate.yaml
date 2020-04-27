@@ -1,5 +1,6 @@
 name: 'Terraform Validate'
 on:
+  - push
   - pull_request
 jobs:
   terraform:
