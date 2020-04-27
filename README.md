@@ -39,6 +39,7 @@ Look into the [terraform.tfvars](terraform.tfvars.example) to see more examples.
 | tags | Additional tags (e.g. `map("BusinessUnit", "XYZ")` | `{}` | 
 | delimiter | Delimiter between namespace, stage, name and attributes | `-` |
 | domain_name | Overwrite auto generated domain name | "" |
+| enabled |	Set to false to prevent the module from creating any resources | true |
 | tld | The top level domain to use if not already specified via `domain_name` or `parent_domain_name` | - |
 | parent_domain_name | The parent hosted zone to sync Nameservers with | "" |
 | is_parent_private_zone | Whether the parent hosted zone is private | false |
