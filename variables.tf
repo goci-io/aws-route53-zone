@@ -112,5 +112,5 @@ variable "vpc_module_state" {
 
 variable "enabled" {
   default     = true
-  description = "Whether this module should be enabled"
+  description = "Whether this module should create resources"
 }
