@@ -1,6 +1,11 @@
 name: 'Terraform Validate'
 on:
-  - pull_request
+  pull_request:
+    branches: 
+      - '*'
+  push:
+      branches:
+        - master
 jobs:
   terraform:
     strategy:
