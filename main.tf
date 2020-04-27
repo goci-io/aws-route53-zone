@@ -6,8 +6,8 @@ locals {
   tld              = element(local.domain_parts, length(local.domain_parts) - 1)
   domain_parts     = var.parent_domain_name == "" ? [var.tld] : split(".", var.parent_domain_name)
   fqdn             = var.domain_name == "" ? format("%s.%s", module.label.id, local.tld) : var.domain_name
-  public_zone_id   = local.use_public ? join("", aws_route53_zone.public_zone.*.zone_id) : aws_route53_zone.dns_zone.zone_id
-  public_ns        = local.use_public ? flatten(aws_route53_zone.public_zone.*.name_servers) : aws_route53_zone.dns_zone.name_servers
+  public_zone_id   = var.enabled ? local.use_public ? join("", aws_route53_zone.public_zone.*.zone_id) : aws_route53_zone.dns_zone.0.zone_id : ""
+  public_ns        = var.enabled ? local.use_public ? flatten(aws_route53_zone.public_zone.*.name_servers) : aws_route53_zone.dns_zone.0.name_servers : []
   vpc_ids          = var.vpc_module_state == "" ? var.zone_vpcs : concat(var.zone_vpcs, data.terraform_remote_state.vpc.*.outputs.vpc_id)
   label_order      = contains(local.prod_stages, var.stage) && var.omit_prod_stage ? ["name", "attributes", "namespace"] : ["name", "stage", "attributes", "namespace"]
   tag_overwrites = {
@@ -21,7 +21,7 @@ locals {
 data "aws_region" "current" {}
 
 data "terraform_remote_state" "vpc" {
-  count   = var.vpc_module_state == "" ? 0 : 1
+  count   = ! var.enabled || var.vpc_module_state == "" ? 0 : 1
   backend = "s3"
 
   config = {
@@ -32,6 +32,7 @@ data "terraform_remote_state" "vpc" {
 
 module "label" {
   source      = "git::https://github.com/cloudposse/terraform-null-label.git?ref=tags/0.16.0"
+  enabled     = var.enabled
   namespace   = var.namespace
   stage       = var.stage
   attributes  = var.attributes
@@ -43,6 +44,7 @@ module "label" {
 
 resource "aws_route53_zone" "dns_zone" {
   provider = aws.member_account
+  count    = var.enabled ? 1 : 0
   name     = local.fqdn
   tags     = module.label.tags
 
@@ -57,29 +59,29 @@ resource "aws_route53_zone" "dns_zone" {
 }
 
 resource "aws_route53_zone_association" "external_vpcs" {
-  count      = length(local.external_vpc_ids)
-  zone_id    = aws_route53_zone.dns_zone.zone_id
+  count      = var.enabled ? length(local.external_vpc_ids) : 0
+  zone_id    = aws_route53_zone.dns_zone.0.zone_id
   vpc_id     = element(local.external_vpc_ids, count.index)
   vpc_region = lookup(var.external_zone_vpcs, local.external_vpc_ids[count.index], data.aws_region.current.name)
 }
 
 resource "aws_route53_zone" "public_zone" {
   provider = aws.member_account
-  count    = local.use_public ? 1 : 0
+  count    = var.enabled && local.use_public ? 1 : 0
   tags     = merge(module.label.tags, { UtilityZone = "true" })
   name     = local.fqdn
 }
 
 data "aws_route53_zone" "parent" {
   provider     = aws.parent_account
-  count        = var.parent_domain_name == "" ? 0 : 1
+  count        = ! var.enabled || var.parent_domain_name == "" ? 0 : 1
   name         = format("%s.", var.parent_domain_name)
   private_zone = var.is_parent_private_zone
 }
 
 resource "aws_route53_record" "ns" {
   provider        = aws.parent_account
-  count           = var.parent_domain_name == "" ? 0 : 1
+  count           = ! var.enabled || var.parent_domain_name == "" ? 0 : 1
   zone_id         = element(data.aws_route53_zone.parent.*.zone_id, 0)
   name            = local.fqdn
   allow_overwrite = true
@@ -95,7 +97,7 @@ resource "aws_route53_record" "ns" {
 }
 
 resource "aws_acm_certificate" "default" {
-  count                     = var.certificate_enabled ? 1 : 0
+  count                     = var.enabled && var.certificate_enabled ? 1 : 0
   provider                  = aws.member_account
   depends_on                = [aws_route53_zone.dns_zone]
   tags                      = module.label.tags
@@ -109,7 +111,7 @@ resource "aws_acm_certificate" "default" {
 }
 
 resource "aws_route53_record" "validation" {
-  count           = var.certificate_enabled ? 1 : 0
+  count           = var.enabled && var.certificate_enabled ? 1 : 0
   provider        = aws.member_account
   zone_id         = local.public_zone_id
   name            = lookup(local.domain_validation_options_list[count.index].0, "resource_record_name")
@@ -120,7 +122,7 @@ resource "aws_route53_record" "validation" {
 }
 
 resource "aws_acm_certificate_validation" "default" {
-  count                   = var.certificate_enabled ? 1 : 0
+  count                   = var.enabled && var.certificate_enabled ? 1 : 0
   provider                = aws.member_account
   depends_on              = [aws_route53_record.validation]
   certificate_arn         = join("", aws_acm_certificate.default.*.arn)
