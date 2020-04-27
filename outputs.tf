@@ -8,7 +8,7 @@ output "public_zone_id" {
 }
 
 output "name_servers" {
-  value = aws_route53_zone.dns_zone.*.name_servers
+  value = flatten(aws_route53_zone.dns_zone.*.name_servers)
 }
 
 output "domain_name" {
