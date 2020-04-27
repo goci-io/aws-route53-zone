@@ -109,7 +109,7 @@ resource "aws_acm_certificate" "default" {
 }
 
 resource "aws_route53_record" "validation" {
-  count           = var.certificate_enabled && length(local.domain_validation_options_list) > 0 ? 1 : 0
+  count           = var.certificate_enabled ? 1 : 0
   provider        = aws.member_account
   zone_id         = local.public_zone_id
   name            = lookup(local.domain_validation_options_list[count.index].0, "resource_record_name")
