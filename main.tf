@@ -21,7 +21,7 @@ locals {
 data "aws_region" "current" {}
 
 data "terraform_remote_state" "vpc" {
-  count   = !var.enabled || var.vpc_module_state == "" ? 0 : 1
+  count   = ! var.enabled || var.vpc_module_state == "" ? 0 : 1
   backend = "s3"
 
   config = {
@@ -74,14 +74,14 @@ resource "aws_route53_zone" "public_zone" {
 
 data "aws_route53_zone" "parent" {
   provider     = aws.parent_account
-  count        = !var.enabled || var.parent_domain_name == "" ? 0 : 1
+  count        = ! var.enabled || var.parent_domain_name == "" ? 0 : 1
   name         = format("%s.", var.parent_domain_name)
   private_zone = var.is_parent_private_zone
 }
 
 resource "aws_route53_record" "ns" {
   provider        = aws.parent_account
-  count           = !var.enabled || var.parent_domain_name == "" ? 0 : 1
+  count           = ! var.enabled || var.parent_domain_name == "" ? 0 : 1
   zone_id         = element(data.aws_route53_zone.parent.*.zone_id, 0)
   name            = local.fqdn
   allow_overwrite = true
