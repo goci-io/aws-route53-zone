@@ -10,14 +10,14 @@ locals {
   public_ns        = local.use_public ? flatten(aws_route53_zone.public_zone.*.name_servers) : aws_route53_zone.dns_zone.name_servers
   vpc_ids          = var.vpc_module_state == "" ? var.zone_vpcs : concat(var.zone_vpcs, data.terraform_remote_state.vpc.*.outputs.vpc_id)
   label_order      = contains(local.prod_stages, var.stage) && var.omit_prod_stage ? ["name", "attributes", "namespace"] : ["name", "stage", "attributes", "namespace"]
-  tag_overwrites   = { 
-    Name = format("ACM %s", var.name == "" ? local.fqdn : var.name) 
+  tag_overwrites = {
+    Name = format("ACM %s", var.name == "" ? local.fqdn : var.name)
   }
 
   subject_alternative_names      = distinct(concat([format("*.%s", local.fqdn)], var.certificate_alternative_names))
   domain_validation_options_list = var.certificate_enabled ? aws_acm_certificate.default.*.domain_validation_options : []
 }
-  
+
 data "aws_region" "current" {}
 
 data "terraform_remote_state" "vpc" {
