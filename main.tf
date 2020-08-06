@@ -43,7 +43,6 @@ module "label" {
 }
 
 resource "aws_route53_zone" "dns_zone" {
-  provider = aws.target
   count    = var.enabled ? 1 : 0
   name     = local.fqdn
   tags     = module.label.tags
@@ -59,7 +58,6 @@ resource "aws_route53_zone" "dns_zone" {
 }
 
 resource "aws_route53_zone_association" "external_vpcs" {
-  provider   = aws.target
   count      = var.enabled ? length(local.external_vpc_ids) : 0
   zone_id    = aws_route53_zone.dns_zone.0.zone_id
   vpc_id     = element(local.external_vpc_ids, count.index)
@@ -67,7 +65,6 @@ resource "aws_route53_zone_association" "external_vpcs" {
 }
 
 resource "aws_route53_zone" "public_zone" {
-  provider = aws.target
   count    = var.enabled && local.use_public ? 1 : 0
   tags     = merge(module.label.tags, { UtilityZone = "true" })
   name     = local.fqdn
@@ -98,7 +95,6 @@ resource "aws_route53_record" "ns" {
 }
 
 resource "aws_acm_certificate" "default" {
-  provider                  = aws.target
   count                     = var.enabled && var.certificate_enabled ? 1 : 0
   depends_on                = [aws_route53_zone.dns_zone]
   tags                      = module.label.tags
@@ -112,7 +108,6 @@ resource "aws_acm_certificate" "default" {
 }
 
 resource "aws_route53_record" "validation" {
-  provider        = aws.target
   count           = var.enabled && var.certificate_enabled ? 1 : 0
   zone_id         = local.public_zone_id
   name            = lookup(local.domain_validation_options_list[count.index].0, "resource_record_name")
@@ -123,7 +118,6 @@ resource "aws_route53_record" "validation" {
 }
 
 resource "aws_acm_certificate_validation" "default" {
-  provider                = aws.target
   count                   = var.enabled && var.certificate_enabled ? 1 : 0
   depends_on              = [aws_route53_record.validation]
   certificate_arn         = join("", aws_acm_certificate.default.*.arn)
