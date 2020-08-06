@@ -1,4 +1,3 @@
-
 variable "stage" {
   type        = string
   description = "The stage the hosted zone will be created for"
@@ -55,18 +54,6 @@ variable "omit_prod_stage" {
   type        = bool
   default     = true
   description = "If true the prod stage will be omitted in the dns zone if it equals one of prod, main or production"
-}
-
-variable "aws_assume_role_arn" {
-  type        = string
-  default     = ""
-  description = "Role to assume to get access to AWS"
-}
-
-variable "aws_parent_account_assume_role_arn" {
-  type        = string
-  default     = ""
-  description = "Role to assume to get access to the AWS parent Account"
 }
 
 variable "certificate_alternative_names" {

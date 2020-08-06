@@ -43,10 +43,9 @@ module "label" {
 }
 
 resource "aws_route53_zone" "dns_zone" {
-  provider = aws.member_account
-  count    = var.enabled ? 1 : 0
-  name     = local.fqdn
-  tags     = module.label.tags
+  count = var.enabled ? 1 : 0
+  name  = local.fqdn
+  tags  = module.label.tags
 
   dynamic "vpc" {
     iterator = zone
@@ -66,21 +65,20 @@ resource "aws_route53_zone_association" "external_vpcs" {
 }
 
 resource "aws_route53_zone" "public_zone" {
-  provider = aws.member_account
-  count    = var.enabled && local.use_public ? 1 : 0
-  tags     = merge(module.label.tags, { UtilityZone = "true" })
-  name     = local.fqdn
+  count = var.enabled && local.use_public ? 1 : 0
+  tags  = merge(module.label.tags, { UtilityZone = "true" })
+  name  = local.fqdn
 }
 
 data "aws_route53_zone" "parent" {
-  provider     = aws.parent_account
+  provider     = aws.owner
   count        = ! var.enabled || var.parent_domain_name == "" ? 0 : 1
   name         = format("%s.", var.parent_domain_name)
   private_zone = var.is_parent_private_zone
 }
 
 resource "aws_route53_record" "ns" {
-  provider        = aws.parent_account
+  provider        = aws.owner
   count           = ! var.enabled || var.parent_domain_name == "" ? 0 : 1
   zone_id         = element(data.aws_route53_zone.parent.*.zone_id, 0)
   name            = local.fqdn
@@ -98,7 +96,6 @@ resource "aws_route53_record" "ns" {
 
 resource "aws_acm_certificate" "default" {
   count                     = var.enabled && var.certificate_enabled ? 1 : 0
-  provider                  = aws.member_account
   depends_on                = [aws_route53_zone.dns_zone]
   tags                      = module.label.tags
   domain_name               = local.fqdn
@@ -112,7 +109,6 @@ resource "aws_acm_certificate" "default" {
 
 resource "aws_route53_record" "validation" {
   count           = var.enabled && var.certificate_enabled ? 1 : 0
-  provider        = aws.member_account
   zone_id         = local.public_zone_id
   name            = lookup(local.domain_validation_options_list[count.index].0, "resource_record_name")
   type            = lookup(local.domain_validation_options_list[count.index].0, "resource_record_type")
@@ -123,7 +119,6 @@ resource "aws_route53_record" "validation" {
 
 resource "aws_acm_certificate_validation" "default" {
   count                   = var.enabled && var.certificate_enabled ? 1 : 0
-  provider                = aws.member_account
   depends_on              = [aws_route53_record.validation]
   certificate_arn         = join("", aws_acm_certificate.default.*.arn)
   validation_record_fqdns = aws_route53_record.validation.*.fqdn
