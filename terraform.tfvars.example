@@ -1,7 +1,7 @@
 # Examples
 
 # Creates domain staging.eu1.goci.io
-# Synchronizes Nameservers attached to goci.io with an additional NS entry
+# Synchronizes Nameservers attached to goci.io with an additional NS entry in the same Account
 namespace          = "goci"
 stage              = "staging"
 attributes         = ["eu1"]
@@ -15,7 +15,7 @@ attributes       = ["eu1"]
 name             = "apps"
 
 # Creates domain apps.europe.staging.goci.io
-# Synchronizes Nameservers attached to goci.io with an additional NS entry
+# Synchronizes Nameservers attached to goci.io with an additional NS entry in the same Account
 namespace          = "goci"
 stage              = "staging"
 domain_name        = "apps.europe.staging.goci.io"
@@ -23,7 +23,7 @@ parent_domain_name = "goci.io"
 
 # Creates domain apps.europe.goci.io
 # Set omit_prod_stage to false to create apps.prod.europe.goci.io
-# Synchronizes Nameservers attached to goci.io with an additional NS entry
+# Synchronizes Nameservers attached to goci.io with an additional NS entry in the same Account
 namespace          = "goci"
 stage              = "prod"
 attributes         = ["europe"]
@@ -31,13 +31,22 @@ parent_domain_name = "goci.io"
 name               = "apps"
 
 # Creates domain apps.europe.staging.goci.io
-# Synchronizes Nameservers attached to goci.io with an additional NS entry
-# Creates a private hosted zone using the aws_assume_role_arn and attaches the VPC 12345678
-# To validate the certificate an additional public hosted zone will be created. The nameservers are synced with the public one.
-# Disable public hosted zone creation by setting create_public_zone to false
+# Synchronizes Nameservers attached to goci.io with an additional NS entry in a different Account
+# Creates a private hosted zone in the current Account and attaches the VPC 12345678 to it
+# To validate the Certificate an additional public Hosted Zone will be created. The nameservers are synced with the public one.
+# Disable public hosted zone creation by setting create_public_zone to false. Note: You wont be able to validate Certificates with ACM
+provider "aws" {
+  alias = "owner"
+
+  assume_role {
+    role_arn = "arn:aws:iam::<ACCOUNT_ID>:role/<ROLE_NAME>"
+  }
+}
 namespace           = "goci"
 stage               = "staging"
 domain_name         = "apps.europe.staging.goci.io"
 parent_domain_name  = "goci.io"
-aws_assume_role_arn = "arn:aws:iam::<ACCOUNT_ID>:role/<ROLE_NAME>"
 zone_vpcs           = ["vpc-12345678"]
+providers = {
+    aws.owner = aws.owner
+}
