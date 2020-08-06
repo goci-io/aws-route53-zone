@@ -1,4 +1,3 @@
-
 variable "stage" {
   type        = string
   description = "The stage the hosted zone will be created for"
