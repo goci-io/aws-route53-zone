@@ -72,8 +72,8 @@ module "zone" {
   ...
 
   providers = {
-    # aws      = aws.target If you are running in a completely different Account
     aws.owner  = aws.parent
+    # aws      = aws.target If you are running in a completely different Account
   }
 }
 ```
