@@ -65,6 +65,10 @@ provider "aws" {
 provider "aws" {
   alias   = "parent"
   version = "~> 2.70"
+
+  assume_role {
+    role_arn = "arn:aws:iam::<ACCOUNT_ID>:role/<ROLE_NAME>"
+  }
 }
 
 module "zone" {
