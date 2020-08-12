@@ -12,7 +12,7 @@ output "name_servers" {
 }
 
 output "domain_name" {
-  value = local.fqdn
+  value = trim(join("", aws_route53_zone.dns_zone.*.name), ".")
 }
 
 output "certificate_arn" {
