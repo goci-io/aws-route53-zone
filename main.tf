@@ -43,9 +43,10 @@ module "label" {
 }
 
 resource "aws_route53_zone" "dns_zone" {
-  count = var.enabled ? 1 : 0
-  name  = local.fqdn
-  tags  = module.label.tags
+  count         = var.enabled ? 1 : 0
+  name          = local.fqdn
+  tags          = module.label.tags
+  force_destroy = var.force_destroy
 
   dynamic "vpc" {
     iterator = zone
@@ -65,9 +66,10 @@ resource "aws_route53_zone_association" "external_vpcs" {
 }
 
 resource "aws_route53_zone" "public_zone" {
-  count = var.enabled && local.use_public ? 1 : 0
-  tags  = merge(module.label.tags, { UtilityZone = "true" })
-  name  = local.fqdn
+  count         = var.enabled && local.use_public ? 1 : 0
+  tags          = merge(module.label.tags, { UtilityZone = "true" })
+  name          = local.fqdn
+  force_destroy = var.force_destroy
 }
 
 data "aws_route53_zone" "parent" {

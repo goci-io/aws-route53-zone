@@ -101,3 +101,9 @@ variable "enabled" {
   default     = true
   description = "Whether this module should create resources"
 }
+
+variable "force_destroy" {
+  type        = bool
+  default     = false
+  description = "Whether to destroy all records (possibly managed outside of Terraform) in the zone when destroying the zone"
+}
