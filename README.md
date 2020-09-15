@@ -48,6 +48,7 @@ Take a look into the [terraform.tfvars](terraform.tfvars.example) to see more Ex
 | zone_vpcs | VPC IDs to attach to the hosted zone. This makes the hosted zone private. | `[]` |
 | tf_bucket | The bucket name to read the remote state from (required if vpc_module_state is used) | "" |
 | vpc_module_state | The key to the state file of an vpc module. Must expose `vpc_id` output | "" |
+| force_destroy | Whether to destroy all records (possibly managed outside of Terraform) in the zone when destroying the zone | `false` |
 
 ### Delegated Zone Access
 
