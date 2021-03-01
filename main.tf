@@ -31,7 +31,7 @@ data "terraform_remote_state" "vpc" {
 }
 
 module "label" {
-  source      = "git::https://github.com/cloudposse/terraform-null-label.git?ref=tags/0.16.0"
+  source      = "git::https://github.com/cloudposse/terraform-null-label.git?ref=tags/0.24.1"
   enabled     = var.enabled
   namespace   = var.namespace
   stage       = var.stage
